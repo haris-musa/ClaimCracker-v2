@@ -1,0 +1,56 @@
+os: windows
+shell: powershell
+python_version: "3.11"
+conda_env: claimcracker2
+package_policy: latest_stable
+standards_year: "2025"
+
+communication:
+  response_prefix: "Yes, Dev"
+  style: professional_friendly
+
+project_type: "ML + Web Application"
+project_purpose: "Fake News Detection"
+project_origin: "Final Year Project"
+
+deployment:
+  platform: render.com
+  tier: free
+  use_case: demo
+
+training_strategy:
+  - optimize for resources
+  - use google colab when needed
+  - keep free tier compatible
+
+documentation_rules:
+  - check .notes for documentation
+  - update after every change
+  - maintain deployment instructions
+  - keep technical_details.md updated with implementation details
+  - record all changes in changelog.md
+  - document ML pipeline decisions
+
+code_rules:
+  - review files fully before changes
+  - understand related files context
+  - get approval for major changes
+  - follow 2025 best practices
+
+best_practices:
+  - use type hints
+  - implement async where beneficial
+  - follow modern packaging
+  - optimize for cloud
+  - handle errors properly
+  - add production logging
+
+version_control:
+  - meaningful commits
+  - document breaking changes
+  - track dependencies
+
+testing:
+  - include unit tests
+  - add deployment tests
+  - test free tier limits

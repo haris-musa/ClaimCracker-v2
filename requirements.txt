@@ -1,0 +1,12 @@
+numpy
+pandas
+scikit-learn
+tensorflow
+transformers
+fastapi
+uvicorn
+python-multipart
+pytest
+black
+flake8
+python-dotenv 

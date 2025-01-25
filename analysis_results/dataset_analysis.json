@@ -1,0 +1,60 @@
+{
+  "basic_stats": {
+    "total_samples": 17424,
+    "real_samples": 9878,
+    "fake_samples": 7546,
+    "features": [
+      "ID",
+      "News_Title",
+      "News_Text",
+      "Published_ Date",
+      "Source",
+      "Source_URL",
+      "Author",
+      "Country",
+      "Language",
+      "News_Type",
+      "Label"
+    ],
+    "missing_values": {
+      "ID": 0,
+      "News_Title": 0,
+      "News_Text": 32,
+      "Published_ Date": 3,
+      "Source": 0,
+      "Source_URL": 3,
+      "Author": 0,
+      "Country": 0,
+      "Language": 0,
+      "News_Type": 0,
+      "Label": 0
+    }
+  },
+  "length_stats": {
+    "title": {
+      "count": 17424.0,
+      "mean": 64.7141873278237,
+      "std": 37.9040183907234,
+      "min": 1.0,
+      "25%": 50.0,
+      "50%": 60.0,
+      "75%": 71.0,
+      "max": 1791.0
+    },
+    "text": {
+      "count": 17392.0,
+      "mean": 208.3145699172033,
+      "std": 94.57384753741484,
+      "min": 1.0,
+      "25%": 147.0,
+      "50%": 201.0,
+      "75%": 256.0,
+      "max": 3115.0
+    }
+  },
+  "split_sizes": {
+    "train": 12196,
+    "val": 1743,
+    "test": 3485
+  }
+}
