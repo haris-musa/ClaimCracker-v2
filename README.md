@@ -1,59 +1,120 @@
 # ClaimCracker v2
 
-A machine learning-powered fake news detection system with a web interface.
+Fake news detection system combining ML with a modern web API.
+
+## Features
+
+- **ML Pipeline**
+
+  - DistilBERT-based classification (96.03% accuracy)
+  - Fast inference (~13.94ms/text)
+  - Efficient text preprocessing
+  - Production-optimized model loading
+
+- **Web API**
+  - FastAPI with async support
+  - Request caching and rate limiting
+  - Prometheus monitoring
+  - Comprehensive error handling
+  - OpenAPI documentation
+
+## Quick Start
+
+1. **Environment Setup**
+
+```bash
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+2. **Run API**
+
+```bash
+cd web
+uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+API will be available at:
+
+- API: http://localhost:8000
+- Docs: http://localhost:8000/docs
+- Metrics: http://localhost:8000/metrics
+
+## API Endpoints
+
+### Core Endpoints
+
+- `GET /` - Welcome and status
+- `GET /health` - Health check
+- `POST /predict` - Fake news detection
+
+### Management
+
+- `GET /metrics` - Prometheus metrics
+- `GET /cache/stats` - Cache statistics
+- `POST /cache/clear` - Clear prediction cache
+
+### Rate Limits
+
+- `/predict`: 20 requests/minute
+- `/health`: 30 requests/minute
+- `/cache/*`: 10 requests/minute
+
+## Performance
+
+### Model Metrics
+
+- Validation Accuracy: 96.03%
+- F1 Score: 0.9603
+- Inference Time: 13.94ms/text
+- Model Size: <500MB
+
+### API Performance
+
+- Response Time: <1s
+- Cache Hit Ratio: ~70%
+- Memory Usage: <512MB
+
+## Development
+
+### Prerequisites
+
+- Python 3.11
+- FastAPI
+- PyTorch
+- Transformers
+
+### Testing
+
+```bash
+pytest tests/
+```
+
+### Code Quality
+
+- Type hints throughout
+- Black formatting
+- PEP 8 compliant
+- Comprehensive tests
 
 ## Project Structure
 
 ```
 ClaimCracker-v2/
-├── Dataset/           # News dataset (real and fake news)
-├── src/              # Source code for ML components
-├── models/           # Saved ML models
-├── web/             # FastAPI web application
-├── tests/           # Unit tests
-└── config/          # Configuration files
+├── Dataset/           # Training data
+├── src/              # ML pipeline
+│   └── ml/
+│       ├── config/   # Configuration
+│       ├── data/     # Data processing
+│       ├── models/   # Model architecture
+│       └── training/ # Training logic
+├── web/              # FastAPI application
+├── tests/            # Test suite
+└── models/           # Model artifacts
 ```
 
-## Setup
+## Documentation
 
-1. Create a virtual environment:
-
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-2. Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-## Usage
-
-1. Train the model:
-
-```bash
-# To be implemented
-python src/train_model.py
-```
-
-2. Run the web application:
-
-```bash
-cd web
-uvicorn main:app --reload
-```
-
-The API will be available at http://localhost:8000
-
-## API Endpoints
-
-- GET `/`: Welcome message
-- POST `/predict`: Predict if a news article is real or fake
-
-## Development
-
-- Use `black` for code formatting
-- Run tests with `pytest`
-- Follow PEP 8 style guidelines
+- API Reference: [docs/api_reference.md](docs/api_reference.md)
+- Model Details: [models/final_model/README.md](models/final_model/README.md)

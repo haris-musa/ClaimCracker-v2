@@ -7,6 +7,8 @@ fastapi
 uvicorn
 python-multipart
 pytest
+pytest-cov
+httpx
 black
 flake8
 python-dotenv 

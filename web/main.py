@@ -6,6 +6,7 @@ os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"  # Suppress TF logging
 
 import time
+import psutil
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -14,9 +15,42 @@ from typing import Dict, Any
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_client import Counter, Histogram, Gauge
 
-from model_service import model_service
-from logging_config import logger
+try:
+    from web.model_service import model_service
+    from web.logging_config import logger
+except ImportError:
+    from model_service import model_service
+    from logging_config import logger
+
+# Initialize metrics
+PREDICTION_LATENCY = Histogram(
+    "model_prediction_latency_seconds",
+    "Time spent processing model predictions",
+    buckets=[0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0]
+)
+
+CACHE_HITS = Counter(
+    "cache_hits_total",
+    "Total number of cache hits"
+)
+
+CACHE_MISSES = Counter(
+    "cache_misses_total",
+    "Total number of cache misses"
+)
+
+MEMORY_USAGE = Gauge(
+    "memory_usage_bytes",
+    "Memory usage in bytes"
+)
+
+CPU_USAGE = Gauge(
+    "cpu_usage_percent",
+    "CPU usage percentage"
+)
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -27,6 +61,17 @@ app = FastAPI(
     version="2.0.0"
 )
 
+# Set up Prometheus instrumentation first
+instrumentator = Instrumentator()
+
+def track_prediction_time(metrics_dict: Any):
+    if hasattr(metrics_dict, 'request') and hasattr(metrics_dict.request, 'url'):
+        if metrics_dict.request.url.path == "/predict":
+            PREDICTION_LATENCY.observe(metrics_dict.modified_duration)
+
+instrumentator.add(track_prediction_time)
+instrumentator.instrument(app).expose(app)
+
 # Add rate limit exceeded error handler
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -35,10 +80,27 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"]
 )
+
+# Add resource monitoring middleware
+@app.middleware("http")
+async def monitor_resources(request: Request, call_next):
+    """Monitor system resources and cache metrics."""
+    # Update resource metrics
+    MEMORY_USAGE.set(psutil.Process().memory_info().rss)
+    CPU_USAGE.set(psutil.Process().cpu_percent())
+    
+    # Update cache metrics from previous stats
+    stats = model_service.get_cache_stats()
+    CACHE_HITS.inc(stats["cache_hits"])
+    CACHE_MISSES.inc(stats["cache_misses"])
+    
+    response = await call_next(request)
+    return response
 
 class PredictionRequest(BaseModel):
     text: str
@@ -103,7 +165,7 @@ async def log_requests(request: Request, call_next):
         raise
 
 @app.get("/")
-@limiter.limit("60/minute")
+@limiter.limit("30/minute")
 async def root(request: Request):
     """Welcome endpoint with API status."""
     logger.info("Welcome endpoint called")

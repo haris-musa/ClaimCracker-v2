@@ -38,7 +38,13 @@ def setup_logging() -> logging.Logger:
     
     # Create logger
     logger = logging.getLogger("claimcracker")
+    
+    # Return existing logger if already configured
+    if logger.handlers:
+        return logger
+        
     logger.setLevel(logging.INFO)
+    logger.propagate = False  # Prevent duplicate logs
     
     # Create formatters
     json_formatter = StructuredJsonFormatter()

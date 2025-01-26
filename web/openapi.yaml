@@ -1,0 +1,186 @@
+openapi: 3.1.0
+info:
+  title: ClaimCracker API
+  description: API for detecting fake news using machine learning
+  version: 2.0.0
+  contact:
+    name: ClaimCracker Support
+    url: https://github.com/yourusername/claimcracker
+
+servers:
+  - url: https://claimcracker-api.onrender.com
+    description: Production server
+  - url: http://localhost:8000
+    description: Local development server
+
+paths:
+  /:
+    get:
+      summary: Welcome endpoint
+      description: Returns API status and version information
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Welcome to ClaimCracker API
+                  version:
+                    type: string
+                    example: 2.0.0
+                  status:
+                    type: string
+                    example: active
+      tags:
+        - Status
+
+  /health:
+    get:
+      summary: Health check
+      description: Checks if the API and model service are functioning correctly
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+        "500":
+          description: Service is unhealthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: Health check failed
+      tags:
+        - Status
+
+  /predict:
+    post:
+      summary: Predict fake news
+      description: Analyzes text to determine if it contains fake news
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+                  description: The text to analyze
+                  example: This is a news article to check for authenticity
+      responses:
+        "200":
+          description: Successful prediction
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  prediction:
+                    type: string
+                    enum: [Real, Fake]
+                  confidence:
+                    type: number
+                    format: float
+                    minimum: 0
+                    maximum: 1
+                  probabilities:
+                    type: object
+                    properties:
+                      Real:
+                        type: number
+                      Fake:
+                        type: number
+        "422":
+          description: Validation error
+        "429":
+          description: Rate limit exceeded
+        "500":
+          description: Model prediction error
+      tags:
+        - Prediction
+
+  /cache/stats:
+    get:
+      summary: Cache statistics
+      description: Returns statistics about the prediction cache
+      responses:
+        "200":
+          description: Cache statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cache_hits:
+                    type: integer
+                  cache_misses:
+                    type: integer
+                  cache_size:
+                    type: integer
+                  max_size:
+                    type: integer
+                  uptime:
+                    type: number
+      tags:
+        - Cache
+
+  /cache/clear:
+    post:
+      summary: Clear cache
+      description: Clears the prediction cache
+      responses:
+        "200":
+          description: Cache cleared successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: Cache cleared
+      tags:
+        - Cache
+
+  /metrics:
+    get:
+      summary: Prometheus metrics
+      description: Returns Prometheus metrics for monitoring
+      responses:
+        "200":
+          description: Metrics in Prometheus format
+          content:
+            text/plain:
+              schema:
+                type: string
+      tags:
+        - Monitoring
+
+components:
+  schemas: {}
+
+tags:
+  - name: Status
+    description: API status endpoints
+  - name: Prediction
+    description: Text analysis endpoints
+  - name: Cache
+    description: Cache management endpoints
+  - name: Monitoring
+    description: Monitoring and metrics endpoints

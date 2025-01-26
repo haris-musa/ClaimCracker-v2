@@ -16,17 +16,33 @@ if project_root not in sys.path:
     sys.path.append(project_root)
 
 from src.ml.models.classifier import NewsClassifier
-from logging_config import logger
+try:
+    from web.logging_config import logger
+except ImportError:
+    from logging_config import logger
+
+# Default paths
+DEFAULT_MODEL_DIR = os.path.join(project_root, "models/final_model")
+TEST_MODEL_DIR = os.path.join(project_root, "models/test_model")
 
 class ModelService:
     """Service for news classification model."""
     
-    def __init__(self, model_dir: str = "../models/final_model"):
+    def __init__(self, model_dir: str = None):
         """Initialize the model service.
         
         Args:
-            model_dir: Directory containing the model files
+            model_dir: Directory containing the model files. If None:
+                     - Uses TEST_MODEL_DIR if TESTING env var is set
+                     - Uses DEFAULT_MODEL_DIR otherwise
         """
+        if model_dir is None:
+            # Use test model if in testing environment
+            if os.getenv("TESTING"):
+                model_dir = TEST_MODEL_DIR
+            else:
+                model_dir = DEFAULT_MODEL_DIR
+                
         self.model_dir = Path(model_dir).resolve()
         logger.info(
             "Initializing model service",
@@ -43,6 +59,9 @@ class ModelService:
         self.cache_misses = 0
         self.start_time = time.time()
         self.max_cache_size = 1000  # Store up to 1000 predictions
+        
+        # Initialize cached predict
+        self._cached_predict = lru_cache(maxsize=self.max_cache_size)(self._make_prediction)
         
         logger.info(
             "Model service initialized",
@@ -74,112 +93,93 @@ class ModelService:
                 )
                 raise
     
-    @lru_cache(maxsize=1000)
-    def _cached_predict(self, text: str) -> Dict[str, Any]:
-        """Make a cached prediction.
+    def _make_prediction(self, text: str) -> Dict[str, Any]:
+        """Make a prediction without caching."""
+        # Validate text length
+        if len(text) > 100000:  # 100KB limit
+            raise ValueError("Text too long. Maximum length is 100,000 characters.")
         
-        Args:
-            text: Input text to classify
+        if self.model is None:
+            self.load_model()
             
-        Returns:
-            Dictionary containing prediction results
-        """
+        # Tokenize
+        inputs = self.tokenizer(
+            text,
+            return_tensors="pt",
+            truncation=True,
+            max_length=512
+        )
+        
+        # Move inputs to device
+        inputs = {k: v.to(self.device) for k, v in inputs.items()}
+        
+        # Get prediction
         start_time = time.time()
+        with torch.no_grad():
+            outputs = self.model(**inputs)
+            logits = outputs["logits"]
+            probs = torch.softmax(logits, dim=1)
+            
+        # Get prediction and confidence
+        pred_idx = torch.argmax(probs, dim=1).item()
+        confidence = probs[0][pred_idx].item()
         
-        try:
-            # Tokenize
-            inputs = self.tokenizer(
-                text,
-                return_tensors="pt",
-                truncation=True,
-                max_length=512
-            )
-            
-            # Move inputs to device
-            inputs = {k: v.to(self.device) for k, v in inputs.items()}
-            
-            # Get prediction
-            with torch.no_grad():
-                outputs = self.model(**inputs)
-                logits = outputs["logits"]
-                probs = torch.softmax(logits, dim=1)
-                
-            # Get prediction and confidence
-            pred_idx = torch.argmax(probs).item()
-            prediction = self.labels[pred_idx]
-            confidence = probs[0][pred_idx].item()
-            
-            # Format probabilities
-            prob_dict = {
+        # Calculate inference time
+        inference_time = time.time() - start_time
+        
+        result = {
+            "prediction": self.labels[pred_idx],
+            "confidence": confidence,
+            "probabilities": {
                 label: prob.item()
                 for label, prob in zip(self.labels, probs[0])
             }
-            
-            result = {
-                "prediction": prediction,
+        }
+        
+        logger.info(
+            "Made prediction",
+            extra={"extra_data": {
+                "prediction": result["prediction"],
                 "confidence": confidence,
-                "probabilities": prob_dict
-            }
-            
-            # Log prediction
-            logger.info(
-                "Made prediction",
-                extra={"extra_data": {
-                    "prediction": prediction,
-                    "confidence": confidence,
-                    "inference_time": time.time() - start_time,
-                    "text_length": len(text)
-                }}
-            )
-            
-            return result
-            
-        except Exception as e:
-            logger.error(
-                "Prediction failed",
-                exc_info=True,
-                extra={"extra_data": {
-                    "error": str(e),
-                    "text_length": len(text)
-                }}
-            )
-            raise
-    
+                "inference_time": inference_time,
+                "text_length": len(text)
+            }}
+        )
+        
+        return result
+
     def predict(self, text: str) -> Dict[str, Any]:
-        """Make a prediction with caching.
+        """Make a prediction for the given text.
         
         Args:
-            text: Input text to classify
+            text: Text to classify
             
         Returns:
-            Dictionary containing prediction results
+            Dictionary containing prediction, confidence and probabilities
         """
-        # Ensure model is loaded
-        self.load_model()
-        
-        # Track cache stats
-        cache_info = self._cached_predict.cache_info()
-        if cache_info.hits > self.cache_hits:
-            self.cache_hits = cache_info.hits
+        # Try to get from cache
+        try:
+            result = self._cached_predict(text)
+            self.cache_hits += 1
             logger.info(
                 "Cache hit",
                 extra={"extra_data": {
                     "total_hits": self.cache_hits,
-                    "cache_size": cache_info.currsize
+                    "cache_size": self._cached_predict.cache_info().currsize
                 }}
             )
-        if cache_info.misses > self.cache_misses:
-            self.cache_misses = cache_info.misses
+        except Exception as e:
+            self.cache_misses += 1
             logger.info(
                 "Cache miss",
                 extra={"extra_data": {
                     "total_misses": self.cache_misses,
-                    "cache_size": cache_info.currsize
+                    "cache_size": self._cached_predict.cache_info().currsize
                 }}
             )
+            result = self._make_prediction(text)
             
-        # Return cached or new prediction
-        return self._cached_predict(text)
+        return result
     
     def get_cache_stats(self) -> Dict[str, Any]:
         """Get cache statistics.

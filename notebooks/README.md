@@ -1,51 +1,77 @@
-# ClaimCracker v2 - Training Notebooks
+# Training Pipeline
 
-This directory contains the Jupyter notebook used for model training and experimentation.
+This directory contains the training pipeline for ClaimCracker's fake news detection model.
 
-## Notebook
+## Notebooks
 
-`train_model.ipynb` - Main training notebook
+### `train_model.ipynb`
 
-- Designed for Google Colab
-- Uses GPU acceleration
-- Includes visualization and analysis
-- Achieves 96.03% validation accuracy
-- ~13.94ms inference time per text
+Production training notebook optimized for Google Colab.
 
-## Setup Instructions
+**Features**:
 
-1. Upload dataset to Google Drive:
+- GPU-accelerated training
+- Automatic mixed precision
+- Early stopping with F1 metric
+- Performance visualization
+- Model export and testing
 
-   - Create folder: `ClaimCracker/data`
-   - Upload `Dataset.csv`
+**Performance**:
 
-2. Open notebook in Colab:
+- Validation Accuracy: 96.03%
+- F1 Score: 0.9603
+- Inference Time: 13.94ms/text
+- Model Size: <500MB
 
-   - File > Open notebook > GitHub
-   - Enter repository URL
-   - Select `notebooks/train_model.ipynb`
+## Setup
 
-3. Connect to GPU runtime:
+1. **Data Preparation**
 
-   - Runtime > Change runtime type
-   - Select GPU
+```bash
+# In Google Drive
+ClaimCracker/
+└── data/
+    └── Dataset.csv  # Combined dataset
+```
 
-4. Run all cells:
-   - The notebook will:
-     - Mount Google Drive
-     - Install dependencies
-     - Train model
-     - Save results
+2. **Colab Setup**
 
-## Model Outputs
+- Open: File > Open notebook > GitHub
+- URL: `[repository-url]`
+- Select: `notebooks/train_model.ipynb`
+- Runtime: GPU (T4/P100)
 
-The trained model and configuration are saved to:
-`/content/drive/MyDrive/ClaimCracker/final_model/`
+3. **Training**
 
-Files saved:
+- Mount Google Drive
+- Install dependencies
+- Run training pipeline
+- Export model artifacts
 
-- `model.pt` - Model weights
-- `config.pt` - Model configuration
-- `model_architecture.py` - Model class definition
-- `test_model.py` - Example usage and testing
-- `README.md` - Documentation
+## Outputs
+
+Training produces the following in `/content/drive/MyDrive/ClaimCracker/final_model/`:
+
+```
+final_model/
+├── model.pt              # Model weights
+├── config.pt            # Configuration
+├── model_architecture.py # Model definition
+├── test_model.py        # Usage examples
+└── README.md            # Documentation
+```
+
+## Performance Optimization
+
+- Batch size: 16 (free-tier compatible)
+- Learning rate: 2e-5
+- Weight decay: 0.01
+- Warmup steps: 500
+- Early stopping: F1-based
+
+## Resource Usage
+
+- GPU Memory: <8GB
+- Training Time: ~1 hour
+- Disk Space: <1GB
+- RAM: <16GB
