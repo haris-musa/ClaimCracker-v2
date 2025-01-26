@@ -10,7 +10,7 @@ info:
 servers:
   - url: https://claimcracker-api.onrender.com
     description: Production server
-  - url: http://localhost:8000
+  - url: http://localhost:10000
     description: Local development server
 
 paths:

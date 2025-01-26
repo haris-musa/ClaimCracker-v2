@@ -256,4 +256,7 @@ async def add_rate_limit_headers(request: Request, call_next):
 
 if __name__ == "__main__":
     logger.info("Starting API server")
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True) 
+    port = int(os.getenv("PORT", 10000))  # Render sets PORT environment variable
+    host = os.getenv("HOST", "0.0.0.0")
+    logger.info(f"Server will listen on {host}:{port}")
+    uvicorn.run("main:app", host=host, port=port, reload=False)  # Disable reload in production 

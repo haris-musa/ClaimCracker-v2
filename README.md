@@ -67,14 +67,14 @@ pip install -r requirements.txt
 
 ```bash
 cd web
-uvicorn main:app --host 0.0.0.0 --port 8000
+uvicorn main:app --host 0.0.0.0 --port 10000
 ```
 
 API will be available at:
 
-- API: http://localhost:8000
-- Docs: http://localhost:8000/docs
-- Metrics: http://localhost:8000/metrics
+- API: http://localhost:10000
+- Docs: http://localhost:10000/docs
+- Metrics: http://localhost:10000/metrics
 
 ## API Endpoints
 

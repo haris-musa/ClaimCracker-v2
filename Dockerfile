@@ -30,13 +30,15 @@ ENV PYTHONUNBUFFERED=1
 ENV MAX_THREADS=4
 
 # Expose port
-EXPOSE 8000
+EXPOSE 10000
 
 # Create entrypoint script
 RUN echo '#!/bin/sh\n\
 if [ -n "$MODEL_FILE_URL" ]; then\n\
-    echo "Downloading model from $MODEL_FILE_URL..."\n\
-    curl -L "$MODEL_FILE_URL" -o models/final_model/model.pt\n\
+    echo "Downloading model files..."\n\
+    MODEL_BASE_URL=$(echo "$MODEL_FILE_URL" | sed "s/model.pt$//")\n\
+    curl -L "${MODEL_BASE_URL}model.pt" -o models/final_model/model.pt\n\
+    curl -L "${MODEL_BASE_URL}config.pt" -o models/final_model/config.pt\n\
 fi\n\
 cd /app/web\n\
 exec uvicorn main:app --host 0.0.0.0 --port $PORT\n\

@@ -68,3 +68,5 @@ desktop.ini
 models/final_model/model.pt
 models/**/*.pt
 !models/**/README.md
+
+claimcracker-web
