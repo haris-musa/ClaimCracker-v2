@@ -140,23 +140,20 @@ class NewsClassifier(nn.Module):
         """
         load_path = Path(load_dir)
         
-        # Load config with weights_only for security
+        # Load config without weights_only since it contains Python objects
         config = torch.load(
             load_path / "config.pt",
-            map_location='cpu',
-            weights_only=True,
-            mmap=True
+            map_location='cpu'
         )
         
         # Create model instance
         model = cls(**config)
         
-        # Load state dict with weights_only for security
+        # Load state dict with weights_only since it only contains tensors
         state_dict = torch.load(
             load_path / "model.pt",
             map_location='cpu',
-            weights_only=True,
-            mmap=True
+            weights_only=True
         )
         model.load_state_dict(state_dict)
         
