@@ -18,6 +18,41 @@ Fake news detection system combining ML with a modern web API.
   - Comprehensive error handling
   - OpenAPI documentation
 
+## Environment Setup
+
+### Requirements
+
+- Python 3.11.11
+- Conda (recommended) or virtualenv
+
+### Using Conda
+
+```bash
+# Create conda environment
+conda create -n claimcracker2 python=3.11.11
+
+# Activate environment
+conda activate claimcracker2
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+### Using virtualenv
+
+```bash
+# Create virtual environment
+python -m venv venv
+
+# Activate environment (Windows)
+.\venv\Scripts\activate
+# OR (Unix/macOS)
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
 ## Quick Start
 
 1. **Environment Setup**
@@ -90,13 +125,6 @@ API will be available at:
 ```bash
 pytest tests/
 ```
-
-### Code Quality
-
-- Type hints throughout
-- Black formatting
-- PEP 8 compliant
-- Comprehensive tests
 
 ## Project Structure
 

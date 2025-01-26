@@ -1,0 +1,30 @@
+# Development
+tests/
+notebooks/
+.pytest_cache/
+.vscode/
+.idea/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Data and Analysis
+Dataset/
+analysis_results/
+
+# Version Control
+.git/
+.gitignore
+.cursorrules
+
+# Temporary
+*.pyc
+__pycache__/
+*.log
+logs/
+
+# Notes and Scripts
+.notes/
+update_directory.ps1 

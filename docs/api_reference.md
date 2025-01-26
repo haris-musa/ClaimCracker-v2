@@ -68,6 +68,8 @@ POST /predict
 
 Analyzes text to determine if it contains fake news.
 
+**Note:** The model is loaded lazily (on first prediction) to optimize resource usage. The health check endpoint will attempt to load the model to verify its availability.
+
 **Rate Limit:** 20 requests per minute
 
 **Request Body:**
@@ -187,11 +189,3 @@ Common error status codes:
 - `422`: Validation Error
 - `429`: Rate Limit Exceeded
 - `500`: Internal Server Error
-
-## Best Practices
-
-1. Implement caching on your end to avoid hitting rate limits
-2. Handle rate limit errors gracefully by respecting the reset time
-3. Keep text inputs under 100,000 characters
-4. Monitor the response headers for rate limit status
-5. Implement proper error handling for all possible response codes

@@ -1,14 +1,20 @@
-numpy
-pandas
-scikit-learn
-tensorflow
-transformers
-fastapi
-uvicorn
-python-multipart
-pytest
-pytest-cov
-httpx
-black
-flake8
-python-dotenv 
+# Core ML dependencies
+torch==2.5.1
+transformers==4.48.1
+tokenizers==0.21.0
+
+# API and Web
+fastapi==0.115.7
+uvicorn==0.34.0
+python-multipart==0.0.20
+slowapi==0.1.9
+prometheus-fastapi-instrumentator==7.0.2
+prometheus-client==0.21.1
+psutil==5.9.0
+
+# Configuration
+python-dotenv==1.0.1
+pydantic==2.10.6
+pydantic-core==2.27.2
+
+# Note: Python version 3.11.11 required 

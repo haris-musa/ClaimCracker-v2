@@ -1,0 +1,20 @@
+# Install production requirements first
+-r requirements.txt
+
+# Testing
+pytest==8.3.4
+pytest-cov==6.0.0
+httpx==0.28.1
+
+# Code Quality
+black==24.10.0
+flake8==7.1.1
+
+# Data Analysis
+numpy==2.0.2
+pandas==2.2.3
+scikit-learn==1.6.1
+matplotlib==3.10.0
+seaborn==0.13.2
+
+# Note: Python version 3.11.11 required 
