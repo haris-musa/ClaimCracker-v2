@@ -1,3 +1,26 @@
+---
+title: ClaimCracker
+emoji: 🔍
+colorFrom: blue
+colorTo: red
+sdk: docker
+app_file: web/main.py
+app_port: 10000
+pinned: false
+license: mit
+python_version: "3.11.11"
+env:
+  - PYTHONUNBUFFERED=1
+  - MAX_THREADS=2
+  - PYTORCH_NO_CUDA=1
+  - OMP_NUM_THREADS=1
+  - MKL_NUM_THREADS=1
+  - ENVIRONMENT=production
+  - LOG_LEVEL=INFO
+  - HF_HOME=/tmp/.cache/huggingface
+  - LOG_DIR=/tmp/logs
+---
+
 # ClaimCracker v2
 
 Fake news detection system combining ML with a modern web API.

@@ -259,4 +259,4 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", 10000))  # Render sets PORT environment variable
     host = os.getenv("HOST", "0.0.0.0")
     logger.info(f"Server will listen on {host}:{port}")
-    uvicorn.run("main:app", host=host, port=port, reload=False)  # Disable reload in production 
+    uvicorn.run("web.main:app", host=host, port=port, reload=False)  # Use correct module path 

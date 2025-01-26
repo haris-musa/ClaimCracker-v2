@@ -3,9 +3,8 @@
 import logging
 import logging.handlers
 import json
-from datetime import datetime
+import os
 from pathlib import Path
-from typing import Any, Dict
 
 class StructuredJsonFormatter(logging.Formatter):
     """Custom formatter that outputs logs in JSON format with extra fields."""
@@ -32,9 +31,9 @@ class StructuredJsonFormatter(logging.Formatter):
 
 def setup_logging() -> logging.Logger:
     """Set up structured logging with console and file handlers."""
-    # Create logs directory if it doesn't exist
-    logs_dir = Path("logs")
-    logs_dir.mkdir(exist_ok=True)
+    # Get logs directory from environment variable
+    logs_dir = Path(os.getenv("LOG_DIR", "/tmp/logs"))
+    logs_dir.mkdir(parents=True, exist_ok=True)
     
     # Create logger
     logger = logging.getLogger("claimcracker")

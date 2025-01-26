@@ -9,8 +9,13 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     gcc \
     python3-dev \
-    curl \
     && rm -rf /var/lib/apt/lists/*
+
+# Create cache directories with correct permissions
+RUN mkdir -p /tmp/.cache/huggingface && \
+    mkdir -p /tmp/logs && \
+    chmod 777 /tmp/.cache/huggingface && \
+    chmod 777 /tmp/logs
 
 # Copy requirements first for better caching
 COPY requirements.txt .
@@ -18,12 +23,10 @@ COPY requirements.txt .
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy only necessary files
+# Copy application files
 COPY web/ web/
 COPY src/ src/
-
-# Create model directory and download model at runtime
-RUN mkdir -p models/final_model
+COPY models/ models/
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
@@ -31,21 +34,12 @@ ENV MAX_THREADS=2
 ENV PYTORCH_NO_CUDA=1
 ENV OMP_NUM_THREADS=1
 ENV MKL_NUM_THREADS=1
+ENV PYTHONPATH=/app
+ENV HF_HOME=/tmp/.cache/huggingface
+ENV LOG_DIR=/tmp/logs
 
 # Expose port
 EXPOSE 10000
 
-# Create entrypoint script
-RUN echo '#!/bin/sh\n\
-if [ -n "$MODEL_FILE_URL" ]; then\n\
-    echo "Downloading model files..."\n\
-    MODEL_BASE_URL=$(echo "$MODEL_FILE_URL" | sed "s/model.pt$//")\n\
-    curl -L "${MODEL_BASE_URL}model.pt" -o models/final_model/model.pt\n\
-    curl -L "${MODEL_BASE_URL}config.pt" -o models/final_model/config.pt\n\
-fi\n\
-cd /app/web\n\
-exec uvicorn main:app --host 0.0.0.0 --port ${PORT:-10000} --workers 1 --limit-max-requests 500\n\
-' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
-
-# Use entrypoint script
-ENTRYPOINT ["/app/entrypoint.sh"] 
+# Start command
+CMD ["uvicorn", "web.main:app", "--host", "0.0.0.0", "--port", "10000"] 

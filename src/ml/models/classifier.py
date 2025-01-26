@@ -5,6 +5,7 @@ import torch
 from torch import nn
 from transformers import AutoModel, AutoTokenizer
 from pathlib import Path
+import json
 
 class NewsClassifier(nn.Module):
     """Transformer-based classifier for fake news detection."""
@@ -115,18 +116,15 @@ class NewsClassifier(nn.Module):
             pickle_protocol=5
         )
         
-        # Save config as a simple dict
+        # Save config as JSON for security
         config = {
             "hidden_size": self.hidden_size,
             "num_classes": self.num_classes,
             "model_name": self.model_name,
             "dropout": self.dropout.p
         }
-        torch.save(
-            config,
-            save_path / "config.pt",
-            pickle_protocol=5
-        )
+        with open(save_path / "config.json", "w") as f:
+            json.dump(config, f)
     
     @classmethod
     def from_pretrained(cls, load_dir: str) -> "NewsClassifier":
@@ -140,15 +138,9 @@ class NewsClassifier(nn.Module):
         """
         load_path = Path(load_dir)
         
-        # Load config with custom unpickler for security
-        config = {}
-        with open(load_path / "config.pt", 'rb') as f:
-            config_data = torch.load(f, map_location='cpu', weights_only=True)
-            # Extract only the needed values
-            config["hidden_size"] = int(config_data.get("hidden_size", 768))
-            config["num_classes"] = int(config_data.get("num_classes", 2))
-            config["model_name"] = str(config_data.get("model_name", "distilbert-base-uncased"))
-            config["dropout"] = float(config_data.get("dropout", 0.1))
+        # Load config from JSON
+        with open(load_path / "config.json", "r") as f:
+            config = json.load(f)
         
         # Create model instance
         model = cls(**config)
