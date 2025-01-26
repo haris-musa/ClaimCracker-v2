@@ -11,15 +11,25 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 from typing import Dict, Any
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from model_service import model_service
 from logging_config import logger
+
+# Initialize rate limiter
+limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(
     title="ClaimCracker",
     description="Fake News Detection API",
     version="2.0.0"
 )
+
+# Add rate limit exceeded error handler
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Add CORS middleware
 app.add_middleware(
@@ -93,8 +103,9 @@ async def log_requests(request: Request, call_next):
         raise
 
 @app.get("/")
-async def root():
-    """Welcome endpoint."""
+@limiter.limit("60/minute")
+async def root(request: Request):
+    """Welcome endpoint with API status."""
     logger.info("Welcome endpoint called")
     return {
         "message": "Welcome to ClaimCracker API",
@@ -103,7 +114,8 @@ async def root():
     }
 
 @app.get("/health")
-async def health():
+@limiter.limit("30/minute")
+async def health(request: Request):
     """Health check endpoint."""
     try:
         # Try to load model
@@ -119,17 +131,19 @@ async def health():
         raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
 
 @app.post("/predict", response_model=PredictionResponse)
-async def predict(request: PredictionRequest):
+@limiter.limit("20/minute")
+async def predict(request: Request, prediction_request: PredictionRequest):
     """Predict if a news article is real or fake.
     
     Args:
-        request: News article text
+        request: FastAPI request object
+        prediction_request: News article text
         
     Returns:
         Prediction results including confidence scores
     """
     try:
-        result = model_service.predict(request.text)
+        result = model_service.predict(prediction_request.text)
         return result
     except Exception as e:
         logger.error(
@@ -137,7 +151,7 @@ async def predict(request: PredictionRequest):
             exc_info=True,
             extra={"extra_data": {
                 "error": str(e),
-                "text_length": len(request.text)
+                "text_length": len(prediction_request.text)
             }}
         )
         raise HTTPException(
@@ -146,15 +160,37 @@ async def predict(request: PredictionRequest):
         )
 
 @app.get("/cache/stats", response_model=CacheStats)
-async def cache_stats():
+@limiter.limit("10/minute")
+async def cache_stats(request: Request):
     """Get cache statistics."""
     return model_service.get_cache_stats()
 
 @app.post("/cache/clear")
-async def clear_cache():
+@limiter.limit("5/minute")
+async def clear_cache(request: Request):
     """Clear the prediction cache."""
     model_service.clear_cache()
     return {"status": "Cache cleared"}
+
+@app.middleware("http")
+async def add_rate_limit_headers(request: Request, call_next):
+    """Add rate limit information to response headers."""
+    response = await call_next(request)
+    
+    # Get rate limit data from request state
+    rate_limit_data = getattr(request.state, 'view_rate_limit', None)
+    if rate_limit_data and isinstance(rate_limit_data, tuple) and len(rate_limit_data) == 2:
+        # Rate limit data is a tuple of (remaining, limit)
+        remaining, limit = rate_limit_data
+        
+        # Add headers
+        response.headers['X-RateLimit-Limit'] = str(limit)
+        response.headers['X-RateLimit-Remaining'] = str(remaining)
+        # Calculate reset time (1 minute from now since we use per-minute limits)
+        reset_time = int(time.time() + 60)
+        response.headers['X-RateLimit-Reset'] = str(reset_time)
+    
+    return response
 
 if __name__ == "__main__":
     logger.info("Starting API server")
