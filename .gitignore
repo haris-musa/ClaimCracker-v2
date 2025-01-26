@@ -19,15 +19,13 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-
-# Jupyter Notebook
-.ipynb_checkpoints
-*.ipynb_meta
+.pytest_cache/
 
 # Virtual Environment
 venv/
 env/
 ENV/
+.env
 
 # IDE
 .idea/
@@ -35,26 +33,38 @@ ENV/
 *.swp
 *.swo
 
-# ML specific
-models/
-*.pt
-*.pth
-*.onnx
-*.bin
-tokenizer/
-wandb/
+# Jupyter
+.ipynb_checkpoints
+notebooks/.ipynb_meta
+notebooks/colab_utils/
 
-# Project specific
+# ML Model (except final model)
+models/*
+!models/final_model/
+models/final_model/__pycache__/
+models/test_model/
+
+# Data
 Dataset/
-outputs/
+!Dataset/README.md
+
+# Logs and Output
 logs/
 *.log
-best_model/
+outputs/
+analysis_results/
+
+# Project specific
+.notes/
+.cursorrules
+update_directory.ps1
 
 # OS specific
 .DS_Store
 Thumbs.db
+desktop.ini
 
-.notes/
-.cursorrules
-update_directory.ps1
+# Large model files
+models/final_model/model.pt
+models/**/*.pt
+!models/**/README.md

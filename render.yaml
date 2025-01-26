@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: claimcracker-api
+    runtime: python
+    region: frankfurt # Europe region for better latency
+    buildCommand: |
+      pip install -r requirements.txt
+      mkdir -p models/final_model
+      curl -L $MODEL_FILE_URL -o models/final_model/model.pt
+    startCommand: cd web && uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.11
+      - key: MAX_THREADS
+        value: 4
+      - key: MODEL_FILE_URL
+        sync: false # Marks this as a secret
+    healthCheckPath: /health
+    autoDeploy: true
+    plan: free # Specify the plan type
+
