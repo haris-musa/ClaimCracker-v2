@@ -140,20 +140,25 @@ class NewsClassifier(nn.Module):
         """
         load_path = Path(load_dir)
         
-        # Load config without weights_only since it contains Python objects
-        config = torch.load(
-            load_path / "config.pt",
-            map_location='cpu'
-        )
+        # Load config with custom unpickler for security
+        config = {}
+        with open(load_path / "config.pt", 'rb') as f:
+            config_data = torch.load(f, map_location='cpu', weights_only=True)
+            # Extract only the needed values
+            config["hidden_size"] = int(config_data.get("hidden_size", 768))
+            config["num_classes"] = int(config_data.get("num_classes", 2))
+            config["model_name"] = str(config_data.get("model_name", "distilbert-base-uncased"))
+            config["dropout"] = float(config_data.get("dropout", 0.1))
         
         # Create model instance
         model = cls(**config)
         
-        # Load state dict with weights_only since it only contains tensors
+        # Load state dict with memory mapping for efficiency
         state_dict = torch.load(
             load_path / "model.pt",
             map_location='cpu',
-            weights_only=True
+            weights_only=True,
+            mmap=True
         )
         model.load_state_dict(state_dict)
         

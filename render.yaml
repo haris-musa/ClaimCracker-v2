@@ -7,14 +7,20 @@ services:
       pip install -r requirements.txt
       mkdir -p models/final_model
       curl -L $MODEL_FILE_URL -o models/final_model/model.pt
-    startCommand: cd web && uvicorn main:app --host 0.0.0.0 --port $PORT
+    startCommand: cd web && uvicorn main:app --host 0.0.0.0 --port $PORT --workers 1 --limit-max-requests 500
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.11
       - key: MAX_THREADS
-        value: 4
+        value: 2
       - key: MODEL_FILE_URL
         sync: false # Marks this as a secret
+      - key: PYTORCH_NO_CUDA
+        value: 1
+      - key: OMP_NUM_THREADS
+        value: 1
+      - key: MKL_NUM_THREADS
+        value: 1
     healthCheckPath: /health
     autoDeploy: true
     plan: free # Specify the plan type

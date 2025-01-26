@@ -27,7 +27,10 @@ RUN mkdir -p models/final_model
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
-ENV MAX_THREADS=4
+ENV MAX_THREADS=2
+ENV PYTORCH_NO_CUDA=1
+ENV OMP_NUM_THREADS=1
+ENV MKL_NUM_THREADS=1
 
 # Expose port
 EXPOSE 10000
@@ -41,7 +44,7 @@ if [ -n "$MODEL_FILE_URL" ]; then\n\
     curl -L "${MODEL_BASE_URL}config.pt" -o models/final_model/config.pt\n\
 fi\n\
 cd /app/web\n\
-exec uvicorn main:app --host 0.0.0.0 --port $PORT\n\
+exec uvicorn main:app --host 0.0.0.0 --port ${PORT:-10000} --workers 1 --limit-max-requests 500\n\
 ' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # Use entrypoint script
