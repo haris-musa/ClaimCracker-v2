@@ -1,14 +1,16 @@
 # ClaimCracker v2 - Training Notebooks
 
-This directory contains Jupyter notebooks for model training and experimentation.
+This directory contains the Jupyter notebook used for model training and experimentation.
 
-## Notebooks
+## Notebook
 
-1. `train_model.ipynb` - Main training notebook
-   - Designed for Google Colab
-   - Uses GPU acceleration
-   - Includes visualization
-   - Saves model to Google Drive
+`train_model.ipynb` - Main training notebook
+
+- Designed for Google Colab
+- Uses GPU acceleration
+- Includes visualization and analysis
+- Achieves 96.03% validation accuracy
+- ~13.94ms inference time per text
 
 ## Setup Instructions
 
@@ -37,12 +39,13 @@ This directory contains Jupyter notebooks for model training and experimentation
 
 ## Model Outputs
 
-The trained model and configuration will be saved to:
-`/content/drive/MyDrive/ClaimCracker/models/best_model/`
+The trained model and configuration are saved to:
+`/content/drive/MyDrive/ClaimCracker/final_model/`
 
 Files saved:
 
-- `model.pt` - Model state dict
+- `model.pt` - Model weights
 - `config.pt` - Model configuration
-- `tokenizer/` - Tokenizer files
-- `training_config.json` - Training settings
+- `model_architecture.py` - Model class definition
+- `test_model.py` - Example usage and testing
+- `README.md` - Documentation

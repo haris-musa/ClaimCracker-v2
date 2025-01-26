@@ -53,4 +53,8 @@ best_model/
 
 # OS specific
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+.notes/
+.cursorrules
+update_directory.ps1
