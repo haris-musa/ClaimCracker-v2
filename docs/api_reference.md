@@ -3,7 +3,7 @@
 ## Base URL
 
 ```
-https://api.claimcracker.site
+https://harismusa-claimcracker.hf.space
 ```
 
 ## Rate Limiting

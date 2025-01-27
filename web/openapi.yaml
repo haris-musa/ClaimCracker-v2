@@ -8,7 +8,7 @@ info:
     url: https://github.com/harismusa/ClaimCracker-v2
 
 servers:
-  - url: https://api.claimcracker.site
+  - url: https://harismusa-claimcracker.hf.space
     description: Production server
   - url: http://localhost:10000
     description: Local development server
