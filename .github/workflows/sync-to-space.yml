@@ -24,8 +24,11 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          huggingface-cli repo-variable set CORS_ORIGINS "https://claimcracker.site,https://www.claimcracker.site,http://localhost:3000" --repo harismusa/claimcracker --type space
-          huggingface-cli repo-variable set CORS_ALLOW_CREDENTIALS "true" --repo harismusa/claimcracker --type space
+          # Set production environment variables
+          huggingface-cli repo-variable set ENVIRONMENT "production" --repo harismusa/claimcracker --type space
+          huggingface-cli repo-variable set MAX_WORKERS "4" --repo harismusa/claimcracker --type space
+          huggingface-cli repo-variable set LOG_LEVEL "INFO" --repo harismusa/claimcracker --type space
+          huggingface-cli repo-variable set CACHE_SIZE "1000" --repo harismusa/claimcracker --type space
 
       - name: Push to Space
         env:

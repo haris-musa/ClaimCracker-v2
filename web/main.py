@@ -9,7 +9,7 @@ import time
 import psutil
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 import uvicorn
 from typing import Dict, Any
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -108,6 +108,18 @@ async def monitor_resources(request: Request, call_next):
 class PredictionRequest(BaseModel):
     text: str
 
+    @validator('text')
+    def validate_text(cls, v):
+        # Check minimum length
+        if len(v.strip()) < 10:
+            raise ValueError("Text must be at least 10 characters long")
+        
+        # Check maximum length (100,000 chars ≈ 20,000 words)
+        if len(v) > 100_000:
+            raise ValueError("Text is too long. Maximum length is 100,000 characters")
+        
+        return v.strip()
+
 class PredictionResponse(BaseModel):
     prediction: str
     confidence: float
@@ -179,7 +191,7 @@ async def root(request: Request):
     }
 
 @app.get("/health")
-@limiter.limit("30/minute")
+@limiter.limit("60/minute")
 async def health(request: Request):
     """Health check endpoint."""
     try:
@@ -196,7 +208,7 @@ async def health(request: Request):
         raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
 
 @app.post("/predict", response_model=PredictionResponse)
-@limiter.limit("20/minute")
+@limiter.limit("30/minute")
 async def predict(request: Request, prediction_request: PredictionRequest):
     """Predict if a news article is real or fake.
     
@@ -208,7 +220,23 @@ async def predict(request: Request, prediction_request: PredictionRequest):
         Prediction results including confidence scores
     """
     try:
+        # Log input length for monitoring
+        logger.info(
+            "Prediction request received",
+            extra={"extra_data": {"text_length": len(prediction_request.text)}}
+        )
+        
         result = model_service.predict(prediction_request.text)
+        
+        # Log prediction result
+        logger.info(
+            "Prediction completed",
+            extra={"extra_data": {
+                "prediction": result["prediction"],
+                "confidence": result["confidence"]
+            }}
+        )
+        
         return result
     except Exception as e:
         logger.error(
