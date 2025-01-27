@@ -27,10 +27,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application files
 COPY web/ web/
 COPY src/ src/
+COPY models/final_model/config.json models/final_model/
 
 # Create model directory and download model files
 RUN mkdir -p models/final_model && \
-    curl -L https://huggingface.co/harismusa/claimcracker-model/resolve/main/model.pt -o models/final_model/model.pt
+    curl -L https://huggingface.co/harismusa/claimcracker-model/resolve/main/model.pt -o models/final_model/model.pt && \
+    ls -la models/final_model/
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1

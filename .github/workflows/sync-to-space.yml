@@ -1,11 +1,11 @@
 name: Sync to Hugging Face Space
 on:
   push:
-    branches: [main] # Trigger on push to main branch
+    branches: [main]
 
 jobs:
   sync-to-space:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v3
         with:
