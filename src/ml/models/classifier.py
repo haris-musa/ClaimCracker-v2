@@ -108,7 +108,6 @@ class NewsClassifier(nn.Module):
         save_path = Path(save_dir)
         save_path.mkdir(parents=True, exist_ok=True)
         
-        # Save config as JSON for security and readability
         config = {
             "hidden_size": self.hidden_size,
             "num_classes": self.num_classes,
@@ -137,19 +136,16 @@ class NewsClassifier(nn.Module):
         """
         load_path = Path(load_dir)
         
-        # Load config from JSON
         with open(load_path / "config.json", "r") as f:
             import json
             config = json.load(f)
         
-        # Create model instance
         model = cls(**config)
         
-        # Load state dict with weights_only
         state_dict = torch.load(
             load_path / "model.pt",
             map_location='cpu',
-            weights_only=True  # Safe serialization
+            weights_only=True
         )
         model.load_state_dict(state_dict)
         

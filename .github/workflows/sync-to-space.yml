@@ -20,16 +20,6 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: huggingface-cli login --token $HF_TOKEN
 
-      - name: Set Space Variables
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: |
-          # Set production environment variables
-          huggingface-cli repo-variable set ENVIRONMENT "production" --repo harismusa/claimcracker --type space
-          huggingface-cli repo-variable set MAX_WORKERS "4" --repo harismusa/claimcracker --type space
-          huggingface-cli repo-variable set LOG_LEVEL "INFO" --repo harismusa/claimcracker --type space
-          huggingface-cli repo-variable set CACHE_SIZE "1000" --repo harismusa/claimcracker --type space
-
       - name: Push to Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}

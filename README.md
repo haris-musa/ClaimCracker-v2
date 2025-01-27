@@ -115,8 +115,8 @@ API will be available at:
 
 ### Rate Limits
 
-- `/predict`: 20 requests/minute
-- `/health`: 30 requests/minute
+- `/predict`: 30 requests/minute
+- `/health`: 60 requests/minute
 - `/cache/*`: 10 requests/minute
 
 ## Performance
