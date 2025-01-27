@@ -3,7 +3,7 @@
 ## Base URL
 
 ```
-https://claimcracker-api.onrender.com
+https://api.claimcracker.site
 ```
 
 ## Rate Limiting

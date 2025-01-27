@@ -1,11 +1,10 @@
 """News classification model using transformers."""
 
-from typing import Dict, Any, Optional
+from typing import Dict, Optional
 import torch
 from torch import nn
 from transformers import AutoModel, AutoTokenizer
 from pathlib import Path
-import json
 
 class NewsClassifier(nn.Module):
     """Transformer-based classifier for fake news detection."""
@@ -109,14 +108,7 @@ class NewsClassifier(nn.Module):
         save_path = Path(save_dir)
         save_path.mkdir(parents=True, exist_ok=True)
         
-        # Save model state with pickle_protocol=5 for better compatibility
-        torch.save(
-            self.state_dict(),
-            save_path / "model.pt",
-            pickle_protocol=5
-        )
-        
-        # Save config as JSON for security
+        # Save config as JSON for security and readability
         config = {
             "hidden_size": self.hidden_size,
             "num_classes": self.num_classes,
@@ -124,7 +116,14 @@ class NewsClassifier(nn.Module):
             "dropout": self.dropout.p
         }
         with open(save_path / "config.json", "w") as f:
-            json.dump(config, f)
+            import json
+            json.dump(config, f, indent=2)
+        
+        # Save model state dict
+        torch.save(
+            self.state_dict(),
+            save_path / "model.pt"
+        )
     
     @classmethod
     def from_pretrained(cls, load_dir: str) -> "NewsClassifier":
@@ -140,17 +139,17 @@ class NewsClassifier(nn.Module):
         
         # Load config from JSON
         with open(load_path / "config.json", "r") as f:
+            import json
             config = json.load(f)
         
         # Create model instance
         model = cls(**config)
         
-        # Load state dict with memory mapping for efficiency
+        # Load state dict with weights_only
         state_dict = torch.load(
             load_path / "model.pt",
             map_location='cpu',
-            weights_only=True,
-            mmap=True
+            weights_only=True  # Safe serialization
         )
         model.load_state_dict(state_dict)
         

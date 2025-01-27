@@ -1,0 +1,21 @@
+name: Sync to Hugging Face Space
+on:
+  push:
+    branches: [main] # Trigger on push to main branch
+
+jobs:
+  sync-to-space:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Push to Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git push https://harismusa:$HF_TOKEN@huggingface.co/spaces/harismusa/claimcracker main

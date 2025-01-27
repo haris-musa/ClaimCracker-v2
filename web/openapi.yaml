@@ -5,10 +5,10 @@ info:
   version: 2.0.0
   contact:
     name: ClaimCracker Support
-    url: https://github.com/yourusername/claimcracker
+    url: https://github.com/harismusa/ClaimCracker-v2
 
 servers:
-  - url: https://claimcracker-api.onrender.com
+  - url: https://api.claimcracker.site
     description: Production server
   - url: http://localhost:10000
     description: Local development server

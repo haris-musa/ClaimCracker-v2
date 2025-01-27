@@ -1,6 +1,0 @@
-*.pt filter=lfs diff=lfs merge=lfs -text
-*.pth filter=lfs diff=lfs merge=lfs -text
-*.bin filter=lfs diff=lfs merge=lfs -text
-*.h5 filter=lfs diff=lfs merge=lfs -text
-models/final_model/model.pt filter=lfs diff=lfs merge=lfs -text
-Dataset/*.csv filter=lfs diff=lfs merge=lfs -text 

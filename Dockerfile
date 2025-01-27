@@ -9,6 +9,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     gcc \
     python3-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Create cache directories with correct permissions
@@ -26,7 +27,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application files
 COPY web/ web/
 COPY src/ src/
-COPY models/ models/
+
+# Create model directory and download model files
+RUN mkdir -p models/final_model && \
+    curl -L https://huggingface.co/harismusa/claimcracker-model/resolve/main/model.pt -o models/final_model/model.pt
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1

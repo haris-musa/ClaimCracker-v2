@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 *.so
 .Python
+env/
 build/
 develop-eggs/
 dist/
@@ -15,15 +16,12 @@ lib64/
 parts/
 sdist/
 var/
-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-.pytest_cache/
 
 # Virtual Environment
 venv/
-env/
 ENV/
 .env
 
@@ -33,26 +31,30 @@ ENV/
 *.swp
 *.swo
 
+# Model files
+models/**/model.pt
+models/**/*.bin
+models/**/*.h5
+!models/**/config.json
+!models/**/README.md
+!models/**/test_model.py
+!models/**/model_architecture.py
+
+# Logs
+logs/
+*.log
+
+# Local development
+.DS_Store
+
 # Jupyter
 .ipynb_checkpoints
 notebooks/.ipynb_meta
 notebooks/colab_utils/
 
-# ML Model (except final model)
-models/*
-!models/final_model/
-models/final_model/__pycache__/
-models/test_model/
-
 # Data
 Dataset/
 !Dataset/README.md
-
-# Logs and Output
-logs/
-*.log
-outputs/
-analysis_results/
 
 # Project specific
 .notes/
@@ -60,13 +62,7 @@ analysis_results/
 update_directory.ps1
 
 # OS specific
-.DS_Store
 Thumbs.db
 desktop.ini
 
-# Large model files
-models/final_model/model.pt
-models/**/*.pt
-!models/**/README.md
-
-claimcracker-web
+scripts/
