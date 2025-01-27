@@ -12,6 +12,21 @@ jobs:
           fetch-depth: 0
           lfs: true
 
+      - name: Install Hugging Face CLI
+        run: pip install --upgrade "huggingface_hub[cli]"
+
+      - name: Configure Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: huggingface-cli login --token $HF_TOKEN
+
+      - name: Set Space Variables
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          huggingface-cli repo-variable set CORS_ORIGINS "https://claimcracker.site,https://www.claimcracker.site,http://localhost:3000" --repo harismusa/claimcracker --type space
+          huggingface-cli repo-variable set CORS_ALLOW_CREDENTIALS "true" --repo harismusa/claimcracker --type space
+
       - name: Push to Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
