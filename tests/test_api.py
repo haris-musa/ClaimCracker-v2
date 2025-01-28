@@ -79,10 +79,11 @@ def test_predict_endpoint_invalid_input(mock_model_service):
 
 def test_predict_endpoint_model_error(mock_model_service):
     """Test the prediction endpoint when model fails."""
-    mock_model_service.predict.side_effect = Exception("Model error")
+    test_text = "This is a test article that should be long enough to pass validation."
+    mock_model_service.predict.side_effect = RuntimeError("Model error")
     response = client.post(
         "/predict",
-        json={"text": "test"}
+        json={"text": test_text}
     )
     assert response.status_code == 500
     assert "Model error" in response.json()["detail"]

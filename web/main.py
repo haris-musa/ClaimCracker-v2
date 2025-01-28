@@ -9,7 +9,7 @@ import time
 import psutil
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 import uvicorn
 from typing import Dict, Any
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -108,8 +108,9 @@ async def monitor_resources(request: Request, call_next):
 class PredictionRequest(BaseModel):
     text: str
 
-    @validator('text')
-    def validate_text(cls, v):
+    @field_validator('text')
+    @classmethod
+    def validate_text(cls, v: str) -> str:
         # Check minimum length
         if len(v.strip()) < 10:
             raise ValueError("Text must be at least 10 characters long")
@@ -118,7 +119,7 @@ class PredictionRequest(BaseModel):
         if len(v) > 100_000:
             raise ValueError("Text is too long. Maximum length is 100,000 characters")
         
-        return v.strip()
+        return v
 
 class PredictionResponse(BaseModel):
     prediction: str

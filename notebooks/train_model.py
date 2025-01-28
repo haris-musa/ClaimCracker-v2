@@ -10,15 +10,15 @@ Original file is located at
 
 This notebook trains our fake news detection model using Google Colab's GPU.
 """
+# Training script for fake news detection model
+# Uses DistilBERT with GPU acceleration on Colab
 
-# Mount Google Drive
+# Setup
 from google.colab import drive
 drive.mount('/content/drive')
 
-# Install Dependencies
 !pip install torch transformers pandas scikit-learn tqdm
 
-# Import Libraries
 import torch
 import pandas as pd
 import numpy as np
@@ -33,7 +33,6 @@ from sklearn.metrics import accuracy_score, f1_score
 from tqdm.auto import tqdm
 import matplotlib.pyplot as plt
 
-# Define Model and Dataset Classes
 class NewsClassifier(nn.Module):
     def __init__(
         self,
@@ -80,7 +79,7 @@ class NewsClassifier(nn.Module):
         return self.tokenizer(
             texts,
             max_length=self.max_length,
-            padding='max_length',  # Changed to max_length
+            padding='max_length',
             truncation=True,
             return_tensors="pt"
         )
@@ -109,10 +108,8 @@ class NewsDataset(Dataset):
         return len(self.texts)
 
     def __getitem__(self, idx):
-        # Handle single text
         text = self.texts[idx]
 
-        # Tokenize with padding
         inputs = self.model.tokenizer(
             text,
             max_length=self.model.max_length,
@@ -121,7 +118,6 @@ class NewsDataset(Dataset):
             return_tensors="pt"
         )
 
-        # Remove batch dimension added by tokenizer
         item = {
             "input_ids": inputs["input_ids"].squeeze(0),
             "attention_mask": inputs["attention_mask"].squeeze(0)
@@ -132,7 +128,7 @@ class NewsDataset(Dataset):
 
         return item
 
-# Training Configuration
+# Training settings
 class TrainingConfig:
     def __init__(self):
         self.model_name = "distilbert-base-uncased"
@@ -144,22 +140,17 @@ class TrainingConfig:
         self.num_epochs = 3
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
-# Load and Prepare Data
-# Load data
+# Load and prep data
 df = pd.read_csv('/content/drive/MyDrive/ClaimCracker/data/Dataset.csv')
 
-# Clean data
-df['News_Text'] = df['News_Text'].fillna('')  # Replace NaN with empty string
-df['News_Text'] = df['News_Text'].astype(str)  # Convert all to string
+df['News_Text'] = df['News_Text'].fillna('')
+df['News_Text'] = df['News_Text'].astype(str)
 
-# Convert labels
 label_map = {'Real': 0, 'Fake': 1}
 df['label_idx'] = df['Label'].map(label_map)
 
-# Remove any rows with empty text
 df = df[df['News_Text'].str.strip() != '']
 
-# Split data
 train_df, val_df = train_test_split(
     df,
     test_size=0.1,
@@ -172,16 +163,14 @@ print(f"Validation samples: {len(val_df)}")
 print("\nClass distribution:")
 print(train_df['Label'].value_counts(normalize=True))
 
-# Verify data types
 print("\nSample text type:", type(train_df['News_Text'].iloc[0]))
 print("Text length range:",
       f"Min: {train_df['News_Text'].str.len().min()}, ",
       f"Max: {train_df['News_Text'].str.len().max()}")
 
-# Create model and prepare data
+# Initialize model and data loaders
 config = TrainingConfig()
 
-# Create model
 model = NewsClassifier(
     model_name=config.model_name,
     num_classes=config.num_classes,
@@ -189,7 +178,6 @@ model = NewsClassifier(
     max_length=config.max_length
 ).to(config.device)
 
-# Prepare data
 train_texts = train_df['News_Text'].tolist()
 train_labels = train_df['label_idx'].tolist()
 val_texts = val_df['News_Text'].tolist()
@@ -201,7 +189,7 @@ val_dataset = NewsDataset(val_texts, val_labels, model)
 train_loader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=config.batch_size)
 
-# Setup training
+# Training setup
 optimizer = AdamW(model.parameters(), lr=config.learning_rate)
 scheduler = CosineAnnealingLR(optimizer, T_max=config.num_epochs)
 history = {
@@ -211,11 +199,10 @@ history = {
     "val_f1": []
 }
 
-# Training loop
+# Train model
 for epoch in range(config.num_epochs):
     print(f"\nEpoch {epoch + 1}/{config.num_epochs}")
 
-    # Training
     model.train()
     total_loss = 0
 
@@ -233,7 +220,7 @@ for epoch in range(config.num_epochs):
 
     train_loss = total_loss / len(train_loader)
 
-    # Validation
+    # Validate
     model.eval()
     total_loss = 0
     all_preds = []
@@ -258,25 +245,21 @@ for epoch in range(config.num_epochs):
     val_accuracy = accuracy_score(all_labels, all_preds)
     val_f1 = f1_score(all_labels, all_preds, average='weighted')
 
-    # Update history
     history["train_loss"].append(train_loss)
     history["val_loss"].append(val_loss)
     history["val_accuracy"].append(val_accuracy)
     history["val_f1"].append(val_f1)
 
-    # Update learning rate
     scheduler.step()
 
-    # Print metrics
     print(f"Train Loss: {train_loss:.4f}")
     print(f"Val Loss: {val_loss:.4f}")
     print(f"Val Accuracy: {val_accuracy:.4f}")
     print(f"Val F1: {val_f1:.4f}")
 
-# Plot Results
+# Plot training results
 plt.figure(figsize=(12, 4))
 
-# Loss plot
 plt.subplot(1, 2, 1)
 plt.plot(history['train_loss'], label='Train')
 plt.plot(history['val_loss'], label='Val')
@@ -285,7 +268,6 @@ plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.legend()
 
-# Metrics plot
 plt.subplot(1, 2, 2)
 plt.plot(history['val_accuracy'], label='Accuracy')
 plt.plot(history['val_f1'], label='F1')
@@ -297,7 +279,7 @@ plt.legend()
 plt.tight_layout()
 plt.show()
 
-# Save Model
+# Save trained model
 save_path = Path('/content/drive/MyDrive/ClaimCracker/models/best_model')
 model.save_pretrained(save_path)
 print(f"Model saved to {save_path}")
@@ -318,42 +300,30 @@ def predict_text(text, model, device):
         "confidence": probs[0][pred.item()].item()
     }
 
+# Quick test
 text = "The UNGA President emphasizes Pakistan's responsibility to advocate more assertively for the Kashmir issue at the United Nations."
 result = predict_text(text, model, config.device)
 print(f"Prediction: {result['prediction']}")
 print(f"Confidence: {result['confidence']:.2%}")
 
-# Test different types of news
+# Test various news types
 test_texts = [
-    # Real news style
     """The Federal Reserve announced today it will maintain interest rates at their current level, citing stable inflation and employment numbers. Chair Jerome Powell stated in a press conference that the decision was unanimous among board members.""",
-
-    # Fake news style
     """BREAKING: Scientists discover that drinking coffee while standing causes instant memory loss! Big Coffee companies have been hiding this truth for decades. Share before they delete this!""",
-
-    # Neutral/Ambiguous
     """Local community center hosts annual fundraiser this weekend. Event will feature live music and food vendors from the area.""",
-
-    # Technical
     """A new study published in Nature reveals correlation between atmospheric carbon levels and marine biodiversity changes over the past decade, suggesting potential impacts on ocean ecosystems."""
 ]
 
-# Test each text
 for text in test_texts:
     result = predict_text(text, model, config.device)
     print("\nText:", text[:100], "...")
     print(f"Prediction: {result['prediction']}")
     print(f"Confidence: {result['confidence']:.2%}")
 
-import time
-import torch
-from torch.utils.mobile_optimizer import optimize_for_mobile
-
+# Performance benchmarking
 def benchmark_inference(model, text, num_runs=100):
-    # Warm up
     _ = predict_text(text, model, config.device)
 
-    # Benchmark
     start = time.time()
     for _ in range(num_runs):
         _ = predict_text(text, model, config.device)
@@ -362,56 +332,26 @@ def benchmark_inference(model, text, num_runs=100):
     avg_time = (end - start) / num_runs
     print(f"Average inference time: {avg_time*1000:.2f}ms")
 
-    # Memory usage
     if torch.cuda.is_available():
         memory_allocated = torch.cuda.memory_allocated() / 1024**2
         print(f"GPU Memory allocated: {memory_allocated:.2f}MB")
 
-    # Model size
-    model_size = sum(p.numel() for p in model.parameters()) * 4 / 1024**2  # in MB
+    model_size = sum(p.numel() for p in model.parameters()) * 4 / 1024**2
     print(f"Model size: {model_size:.2f}MB")
 
-# Run benchmark
 test_text = "Sample news article for benchmarking."
 print("Original Model Performance:")
 benchmark_inference(model, test_text)
 
-# Quantize model
-def quantize_model(model):
-    # Move model to CPU for quantization
-    model = model.cpu()
+# Model optimization
+def optimize_for_inference(model):
     model.eval()
 
-    # Fuse modules if needed
-    model_fp32 = torch.quantization.fuse_modules(model, [["classifier"]])
-
-    # Configure quantization
-    model_fp32.qconfig = torch.quantization.get_default_qconfig('fbgemm')
-
-    # Prepare for quantization
-    model_fp32_prepared = torch.quantization.prepare(model_fp32)
-
-    # Convert to quantized model
-    model_int8 = torch.quantization.convert(model_fp32_prepared)
-
-    # Move back to original device
-    model_int8 = model_int8.to(config.device)
-
-    return model_int8
-
-# Alternative optimization approach
-def optimize_for_inference(model):
-    """Optimize model for inference without quantization"""
-    model.eval()  # Set to evaluation mode
-
-    # Use torch.jit to optimize the model
     try:
-        # Create example input
         sample_text = "Sample text for optimization"
         inputs = model.prepare_input([sample_text])
         inputs = {k: v.to(model.device) for k, v in inputs.items()}
 
-        # Script the model
         traced_model = torch.jit.trace(model, (inputs['input_ids'], inputs['attention_mask']))
         traced_model = torch.jit.optimize_for_inference(traced_model)
         print("Model successfully optimized with TorchScript")
@@ -421,23 +361,19 @@ def optimize_for_inference(model):
         print("Falling back to original model")
         return model
 
-# Try optimization
 print("Optimizing model for inference...")
 optimized_model = optimize_for_inference(model)
 
-# Benchmark
 print("\nOptimized Model Performance:")
 benchmark_inference(optimized_model, test_text)
 
 !pip install onnx onnxruntime
 
-# Export to ONNX
+# Export model to ONNX format
 def export_to_onnx(model, save_path):
-    # Prepare dummy input
     dummy_input = model.prepare_input(["Sample text"])
     dummy_input = {k: v.to(config.device) for k, v in dummy_input.items()}
 
-    # Export with higher opset version
     torch.onnx.export(
         model,
         (dummy_input["input_ids"], dummy_input["attention_mask"]),
@@ -456,27 +392,23 @@ def export_to_onnx(model, save_path):
     )
     print(f"Model exported to {save_path}")
 
-# Export model
 onnx_path = save_path / "model.onnx"
 export_to_onnx(model, onnx_path)
 
-# Verify the exported model
 import onnx
 onnx_model = onnx.load(onnx_path)
 onnx.checker.check_model(onnx_model)
 print("ONNX model verified successfully!")
 
-# Check ONNX model size
-onnx_size = onnx_path.stat().st_size / (1024 * 1024)  # Size in MB
+onnx_size = onnx_path.stat().st_size / (1024 * 1024)
 print(f"ONNX model size: {onnx_size:.2f}MB")
 
-@torch.no_grad()  # Disable gradient computation for inference
+# Batch inference for production
+@torch.no_grad()
 def batch_inference(model, texts, batch_size=32):
-    """Efficient batch inference"""
     model.eval()
     results = []
 
-    # Process in batches
     for i in range(0, len(texts), batch_size):
         batch_texts = texts[i:i + batch_size]
         inputs = model.prepare_input(batch_texts)
@@ -487,11 +419,9 @@ def batch_inference(model, texts, batch_size=32):
         probs = torch.softmax(logits, dim=1)
         preds = torch.argmax(logits, dim=1)
 
-        # Move to CPU for processing results
         preds = preds.cpu()
         probs = probs.cpu()
 
-        # Convert to results
         for idx, (pred, prob) in enumerate(zip(preds, probs)):
             pred_idx = pred.item()
             results.append({
@@ -501,8 +431,8 @@ def batch_inference(model, texts, batch_size=32):
 
     return results
 
-# Test batch inference with larger batch
-test_texts = ["Text " + str(i) for i in range(100)]  # 100 texts
+# Test batch processing
+test_texts = ["Text " + str(i) for i in range(100)]
 print("\nBatch Inference Test:")
 start = time.time()
 results = batch_inference(model, test_texts)
@@ -510,54 +440,24 @@ end = time.time()
 print(f"Processed {len(test_texts)} texts in {(end-start)*1000:.2f}ms")
 print(f"Average time per text: {(end-start)*1000/len(test_texts):.2f}ms")
 
-# Show first few results
 print("\nSample results:")
 for i, result in enumerate(results[:5]):
     print(f"Text {i}: {result['prediction']} (Confidence: {result['confidence']:.2%})")
 
-# Test with more realistic examples
-realistic_texts = [
-    "Reuters reports that global markets saw steady growth this quarter according to financial experts.",
-    "SHOCKING: Scientists find that drinking water is actually bad for you! Share this before they delete it!",
-    "Local community center announces new after-school programs starting next month.",
-    "New research published in Science shows promising results in renewable energy efficiency.",
-    "WARNING!! They don't want you to know this secret to instant weight loss!!!"
-] * 20  # Repeat 20 times to test batch processing
-
-print("Batch Processing Test with Realistic Examples:")
-start = time.time()
-results = batch_inference(model, realistic_texts)
-end = time.time()
-
-total_time = (end-start) * 1000  # Convert to ms
-print(f"\nProcessed {len(realistic_texts)} texts in {total_time:.2f}ms")
-print(f"Average time per text: {total_time/len(realistic_texts):.2f}ms")
-
-# Show results for first instance of each text
-print("\nSample results:")
-for i in range(5):
-    print(f"\nText: {realistic_texts[i][:100]}...")
-    print(f"Prediction: {results[i]['prediction']}")
-    print(f"Confidence: {results[i]['confidence']:.2%}")
-
-# Export final model with all necessary files
+# Export production-ready model
 def export_final_model():
-    # Create export directory in Google Drive
     export_dir = Path('/content/drive/MyDrive/ClaimCracker/final_model')
     export_dir.mkdir(exist_ok=True, parents=True)
 
-    # 1. Save model state and config
     torch.save(model.state_dict(), export_dir / 'model.pt')
 
-    # Save config with hardcoded values (same as initialization)
     config = {
-        'hidden_size': 768,  # DistilBERT's hidden size
-        'num_classes': 2,    # Binary classification
-        'dropout': 0.1       # Default dropout
+        'hidden_size': 768,
+        'num_classes': 2,
+        'dropout': 0.1
     }
     torch.save(config, export_dir / 'config.pt')
 
-    # 2. Save model architecture class definition
     model_code = """
 import torch
 from torch import nn
@@ -572,7 +472,7 @@ class NewsClassifier(nn.Module):
 
     def forward(self, input_ids, attention_mask):
         outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
-        pooled_output = outputs[0][:, 0]  # CLS token
+        pooled_output = outputs[0][:, 0]
         pooled_output = self.dropout(pooled_output)
         logits = self.classifier(pooled_output)
         return {"logits": logits}
@@ -586,7 +486,6 @@ class NewsClassifier(nn.Module):
     with open(export_dir / 'model_architecture.py', 'w') as f:
         f.write(model_code)
 
-    # 3. Save test script
     test_script = """
 import torch
 from pathlib import Path
@@ -594,24 +493,16 @@ from transformers import AutoTokenizer
 from model_architecture import NewsClassifier
 
 def load_model(model_dir):
-    # Load config
     config = torch.load(Path(model_dir) / "config.pt")
-
-    # Create model
     model = NewsClassifier(**config)
     model.load_state_dict(torch.load(Path(model_dir) / "model.pt"))
     model.eval()
-
     return model
 
 def test_prediction(text, model_dir="final_model"):
-    # Load model
     model = load_model(model_dir)
-
-    # Prepare input
     inputs = model.prepare_input([text])
 
-    # Predict
     with torch.no_grad():
         outputs = model(**inputs)
         logits = outputs["logits"]
@@ -627,7 +518,6 @@ def test_prediction(text, model_dir="final_model"):
     }
 
 if __name__ == "__main__":
-    # Test examples
     texts = [
         "Reuters reports global markets show steady growth.",
         "SHOCKING: Scientists hide the truth about water!"
@@ -643,7 +533,6 @@ if __name__ == "__main__":
     with open(export_dir / 'test_model.py', 'w') as f:
         f.write(test_script)
 
-    # 4. Create README
     readme = """
 # ClaimCracker v2 - Fake News Detection Model
 
@@ -681,28 +570,26 @@ print(f"Confidence: {result['confidence']:.2%}")
     print("- test_model.py")
     print("- README.md")
 
-# Export the model
 export_final_model()
 
-# Test with more realistic examples
+# Final model testing
 realistic_texts = [
     "Constable killed another injured after car rams into Lahore check post,car belonged to the son of Mian Munir who happens to be a relative samdhi of Maryam Nawaz Sharif",
     "SHOCKING: Scientists find that drinking water is actually bad for you! Share this before they delete it!",
     "Local community center announces new after-school programs starting next month.",
     "New research published in Science shows promising results in renewable energy efficiency.",
     "WARNING!! They don't want you to know this secret to instant weight loss!!!"
-] * 20  # Repeat 20 times to test batch processing
+] * 20
 
 print("Batch Processing Test with Realistic Examples:")
 start = time.time()
 results = batch_inference(model, realistic_texts)
 end = time.time()
 
-total_time = (end-start) * 1000  # Convert to ms
+total_time = (end-start) * 1000
 print(f"\nProcessed {len(realistic_texts)} texts in {total_time:.2f}ms")
 print(f"Average time per text: {total_time/len(realistic_texts):.2f}ms")
 
-# Show results for first instance of each text
 print("\nSample results:")
 for i in range(5):
     print(f"\nText: {realistic_texts[i][:100]}...")

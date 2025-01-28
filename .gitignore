@@ -66,3 +66,5 @@ Thumbs.db
 desktop.ini
 
 scripts/
+
+*.ipynb

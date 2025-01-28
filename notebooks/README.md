@@ -37,9 +37,9 @@ ClaimCracker/
 2. **Colab Setup**
 
 - Open: File > Open notebook > GitHub
-- URL: `[repository-url]`
+- URL: `https://github.com/ClaimCracker-v2/tree/main/notebooks/train_model.ipynb`
 - Select: `notebooks/train_model.ipynb`
-- Runtime: GPU (T4/P100)
+- Runtime: GPU (T4)
 
 3. **Training**
 
@@ -55,10 +55,10 @@ Training produces the following in `/content/drive/MyDrive/ClaimCracker/final_mo
 ```
 final_model/
 ├── model.pt              # Model weights
-├── config.pt            # Configuration
+├── config.json           # Configuration
 ├── model_architecture.py # Model definition
-├── test_model.py        # Usage examples
-└── README.md            # Documentation
+├── test_model.py         # Usage examples
+└── README.md             # Documentation
 ```
 
 ## Performance Optimization

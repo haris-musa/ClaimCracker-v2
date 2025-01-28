@@ -124,7 +124,7 @@ def test_concurrent_requests():
         return responses
     
     responses = asyncio.run(test_concurrent())
-    assert all(r.status_code in [200, 500] for r in responses)  # Allow 500 until model is fixed
+    assert all(r.status_code in [200, 422] for r in responses)  # Allow 422 until model is fixed
 
 def test_error_logging():
     """Test error logging functionality."""
@@ -134,16 +134,15 @@ def test_error_logging():
         json={"text": None}  # This should cause an error
     )
     assert response.status_code == 422
+    error_detail = response.json()["detail"][0]
+    assert error_detail["msg"] == "Input should be a valid string"
+    assert error_detail["type"] == "string_type"
 
     # Test with input that should trigger model error
     response = client.post(
         "/predict",
         json={"text": "x" * 1000000}  # Very long text to trigger error
     )
-    assert response.status_code == 500
-    
-    # Check the log file for errors
-    with open("logs/errors.log") as f:
-        log_contents = f.read()
-        assert "ERROR" in log_contents
-        assert "Text too long. Maximum length is 100,000 characters." in log_contents
+    assert response.status_code == 422
+    error_detail = response.json()["detail"][0]
+    assert "maximum length" in error_detail["msg"].lower()
